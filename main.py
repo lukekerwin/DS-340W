@@ -18,4 +18,4 @@ for i in range (2010,2020):
     
 result = result[~result['Age'].str.contains("Age")]    
 result = result.reset_index(drop=True)
-print(result)
+result.to_csv('data/NHL_2010_2019.csv', index=False)
