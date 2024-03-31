@@ -1,10 +1,12 @@
 import requests
+import json
 import pandas as pd
 import numpy as np
 from datetime import datetime
 from bs4 import BeautifulSoup
 import warnings
 warnings.filterwarnings('ignore')
+
 
 class DataCollection:
     def __init__(self) -> None:
@@ -15,8 +17,8 @@ class DataCollection:
         }
         self.session.headers.update(self.headers)
         
-        self.START_YEAR = 2010
-        self.END_YEAR = 2020
+        self.START_YEAR = 2012
+        self.END_YEAR = 2022
 
     # ---- Contract Data ----
 
@@ -63,9 +65,10 @@ class DataCollection:
                         length = 0
                     pc += 1
         contracts = pd.concat(contracts)
-        contracts.to_csv('data/contracts_raw.csv', index=False)
+        contracts.to_csv('contracts.csv', index=False)
         return contracts
 
+    
     def clean_contract_data(self, contracts: pd.DataFrame):
         # Remove PLAYER.1
         cleaned_contracts = contracts.drop(columns=['PLAYER.1'])
@@ -82,8 +85,21 @@ class DataCollection:
         cleaned_contracts = cleaned_contracts[cleaned_contracts['EXTENSION']==0].reset_index(drop=True)
         cleaned_contracts['id'] = cleaned_contracts['PLAYER'].str.replace(' ', '').str.replace("'", '') + cleaned_contracts['DATE'].astype(int).astype(str)
         cleaned_contracts = cleaned_contracts.drop_duplicates().reset_index(drop=True)
-        cleaned_contracts.to_csv('data/contracts_cleaned.csv', index=False)
+        print(cleaned_contracts)
         return cleaned_contracts
+    
+    def post_contract_data(self, cleaned_contracts: pd.DataFrame):
+        url = 'http://127.0.0.1:5000/api/contracts'
+        cleaned_contracts.columns = [col.replace(' ', '_') for col in cleaned_contracts.columns]
+        print()
+        print(cleaned_contracts.columns)
+        print()
+        data = cleaned_contracts.to_dict('records')
+        r = self.session.post(url, json=data)
+        if r.status_code == 200:
+            print('Contracts posted successfully')
+        else:
+            print('Error posting contracts')
 
     # ---- Statistics Data ----
             
@@ -98,7 +114,6 @@ class DataCollection:
             stats.append(table)
         
         stats = pd.concat(stats)
-        stats.to_csv('data/stats_raw.csv', index=False)
         return stats
     
     def clean_stats_data(self, stats: pd.DataFrame):
@@ -148,15 +163,30 @@ class DataCollection:
                     except:
                         pass
 
-        stats_cleaned['id'] = stats_cleaned['PLAYER'].replace(' ', '') + stats_cleaned['SEASON'].astype(str)
+        stats_cleaned['id'] = stats_cleaned['PLAYER'].str.replace(' ', '').str.replace("'","") + stats_cleaned['SEASON'].astype(str)
         stats_cleaned = stats_cleaned.drop_duplicates(subset=['id']).reset_index(drop=True)
         stats_cleaned['FO%'] = stats_cleaned['FO%'].fillna(0)
-        stats_cleaned.to_csv('data/stats_cleaned.csv', index=False)
         return stats_cleaned
+
+    def post_stats_data(self, stats_cleaned: pd.DataFrame):
+        url = 'http://127.0.0.1:5000/api/statistics'
+        stats_cleaned.columns = [col.replace('%', '_') for col in stats_cleaned.columns]
+        print()
+        print(stats_cleaned.columns)
+        print()
+        data = stats_cleaned.to_dict('records')
+        r = self.session.post(url, json=data)
+        if r.status_code == 200:
+            print('Stats posted successfully')
+        else:
+            print('Error posting stats')   
+
 
 if __name__ == '__main__':
     dc = DataCollection()
     contracts = dc.get_contract_data()
     cleaned_contracts = dc.clean_contract_data(contracts)
+    dc.post_contract_data(cleaned_contracts)
     stats = dc.get_stats_data()
     cleaned_stats = dc.clean_stats_data(stats)
+    dc.post_stats_data(cleaned_stats)
