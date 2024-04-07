@@ -16,7 +16,7 @@ class Contract(db.Model):
     TEAM = Column(String)
     DATE = Column(Integer)
     TYPE = Column(String)
-    EXTENSION = Column(Integer)
+    EXTENSION = Column(Integer) 
     STRUCTURE = Column(String)
     LENGTH = Column(Integer)
     VALUE = Column(Integer)

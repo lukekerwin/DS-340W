@@ -17,7 +17,7 @@ class DataCollection:
         }
         self.session.headers.update(self.headers)
         
-        self.START_YEAR = 2012
+        self.START_YEAR = 2012 
         self.END_YEAR = 2022
 
     # ---- Contract Data ----

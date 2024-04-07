@@ -14,4 +14,4 @@ db = SQLAlchemy(app)
 
 engine = create_engine('mysql+pymysql://root:password1@localhost:3306/ds320')
 Session = sessionmaker(bind=engine)
-
+ 

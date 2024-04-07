@@ -17,11 +17,18 @@ class ContractPredictor:
         stats_data_ = pd.DataFrame(self.statistics_data)
         dataset = []
         for season in sorted(contract_data_['DATE'].unique()):
-            print(f'--- {season} ---')
             contract_data = contract_data_[contract_data_['DATE'].astype(int)==season]
             contract_data = contract_data[contract_data['STRUCTURE'] == '1-way']
             contract_data = contract_data[contract_data['EXTENSION'] == 0]
             stats_data = stats_data_[stats_data_['SEASON'].astype(int).isin([season-3, season-2, season-1])]
+
+            # Weight the data by season
+            weights = {season-3: 0.1, season-2: 0.3, season-1: 0.6}
+            
+            stats_data['WEIGHT'] = stats_data['SEASON'].map(weights)
+
+            for col in ['A', 'BLK', 'EVA', 'EVG', 'EVSH', 'FOL', 'FOW', 'G', 'GP', 'GWG', 'HIT', 'PIM', 'PLUSMINUS', 'PPA', 'PPG', 'PPSH', 'PTS', 'S', 'TOI']:
+                stats_data[col] = stats_data[col] * stats_data['WEIGHT']
 
             stats_data = stats_data.groupby('PLAYER').agg({'A':'sum', 'BLK':'sum', 'EVA':'sum', 'EVG':'sum', 'EVSH':'sum', 'FOL':'sum', 'FOW':'sum',
                                                         'G':'sum', 'GP':'sum', 'GWG':'sum', 'HIT':'sum', 'PIM':'sum', 'PLUSMINUS':'sum', 'PPA':'sum',
@@ -88,5 +95,4 @@ class ContractPredictor:
         predictions['ERROR'] = predictions['ERROR'].apply(lambda x: round(x, 3))
 
         return predictions.to_dict('records')
-
-
+ 
