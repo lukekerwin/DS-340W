@@ -1,0 +1,10 @@
+{
+    "use_multi_threading": true,
+    "max_workers": 20,
+    "manual_match_players": true,
+    "season_weights": {
+        "n-1": 0.5,
+        "n-2": 0.3,
+        "n-3": 0.2
+    }
+}
